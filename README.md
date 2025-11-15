@@ -143,7 +143,7 @@ agriconnect/
 ## Đóng Góp
 - Fork repo và tạo Pull Request.  
 - Theo chuẩn: Conventional Commits (feat:, fix:, docs:).  
-- Liên hệ: [email@example.com] hoặc issue trên GitHub.  
+- Liên hệ: mynnt.22ds@vku.udn.vn hoặc issue trên GitHub.  
 
 ## License
 MIT License - Xem file `LICENSE`.  
