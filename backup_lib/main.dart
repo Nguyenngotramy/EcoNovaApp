@@ -1,30 +1,28 @@
-import 'package:eco_nova_app/core/theme/app_theme.dart';
-import 'package:eco_nova_app/presentation/screens/admin/admin_dashboard_screen.dart';
-import 'package:eco_nova_app/presentation/screens/admin/order_management_screen.dart';
-import 'package:eco_nova_app/presentation/screens/admin/revenue_statistics_screen.dart';
-import 'package:eco_nova_app/presentation/screens/admin/user_management_screen.dart';
-import 'package:eco_nova_app/presentation/screens/auth/select_role_view.dart';
-import 'package:eco_nova_app/presentation/screens/auth/signin_view.dart';
-import 'package:eco_nova_app/presentation/screens/auth/signup_view.dart';
-import 'package:eco_nova_app/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:eco_nova_app/presentation/screens/seller/complete_order_list_screen.dart';
-import 'package:eco_nova_app/presentation/screens/seller/product_list_screen.dart';
-import 'package:eco_nova_app/presentation/screens/seller/seller_chat_list_screen.dart';
-import 'package:eco_nova_app/presentation/screens/seller/seller_dashboard_screen.dart';
-import 'package:eco_nova_app/presentation/screens/seller/seller_profile_screen.dart';
-import 'package:eco_nova_app/presentation/screens/shipper/deliveries/deliveries_list_screen.dart';
-import 'package:eco_nova_app/presentation/screens/shipper/home_shipper_screen.dart';
-import 'package:eco_nova_app/presentation/screens/shipper/profile/profile_screen.dart';
-import 'package:eco_nova_app/presentation/screens/shipper/report/reports_home_screen.dart';
-import 'package:eco_nova_app/presentation/screens/user/chat_list_screen.dart';
-import 'package:eco_nova_app/presentation/screens/user/my_orders_screen.dart';
-import 'package:eco_nova_app/presentation/screens/user/myaccount_screen.dart';
-import 'package:eco_nova_app/presentation/screens/user/search_screen.dart';
-import 'package:eco_nova_app/presentation/widgets/user/component/bottom_nav_bar.dart';
-
-
+import 'package:eco_nova_app/screens/admin/admin_dashboard_screen.dart';
+import 'package:eco_nova_app/screens/admin/order_management_screen.dart';
+import 'package:eco_nova_app/screens/admin/revenue_statistics_screen.dart';
+import 'package:eco_nova_app/screens/admin/user_management_screen.dart';
+import 'package:eco_nova_app/screens/auth/select_role_view.dart';
+import 'package:eco_nova_app/screens/auth/signin_view.dart';
+import 'package:eco_nova_app/screens/auth/signup_view.dart';
+import 'package:eco_nova_app/screens/onboarding/onboarding_screen.dart';
+import 'package:eco_nova_app/screens/seller/complete_order_list_screen.dart';
+import 'package:eco_nova_app/screens/seller/product_list_screen.dart';
+import 'package:eco_nova_app/screens/seller/seller_chat_list_screen.dart';
+import 'package:eco_nova_app/screens/seller/seller_dashboard_screen.dart';
+import 'package:eco_nova_app/screens/seller/seller_profile_screen.dart';
+import 'package:eco_nova_app/screens/shipper/home_shipper_screen.dart';
+import 'package:eco_nova_app/screens/user/chat_list_screen.dart';
+import 'package:eco_nova_app/screens/user/my_orders_screen.dart';
+import 'package:eco_nova_app/screens/user/myaccount_screen.dart';
+import 'package:eco_nova_app/screens/user/search_screen.dart';
+import 'package:eco_nova_app/theme/app_theme.dart';
+import 'package:eco_nova_app/widgets/shipper/report/reports_home_screen.dart';
+import 'package:eco_nova_app/widgets/shipper/deliveries/deliveries_list_screen.dart';
+import 'package:eco_nova_app/widgets/shipper/profile/profile_screen.dart';
+import 'package:eco_nova_app/widgets/user/component/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
-import 'presentation/screens/user/home_user_screen.dart';
+import 'screens/user/home_user_screen.dart';
 
 void main() {
   runApp(MyApp());
