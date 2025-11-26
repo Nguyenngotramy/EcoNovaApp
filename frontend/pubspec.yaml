@@ -1,0 +1,44 @@
+name: eco_nova_app
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'  # Cập nhật để hỗ trợ null safety & Dart 3.x đầy đủ
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  intl: ^0.18.1
+
+  # JSON model
+  json_annotation: ^4.8.1  
+
+  # Font online (Be Vietnam Pro, Inter...)
+  google_fonts: ^6.2.1
+
+  # SVG ICONS
+  flutter_svg: ^2.0.7
+  lucide_icons_flutter: ^3.1.5
+  image_picker: ^1.2.1
+
+  # Auth & API (di chuyển từ dependencies trùng lặp)
+  http: ^1.1.0
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.1  # Device ID
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.8   
+  json_serializable: ^6.7.1
+  flutter_lints: ^5.0.0
+
+flutter:
+
+  uses-material-design: true  
+
+  assets:
+    - assets/images/
