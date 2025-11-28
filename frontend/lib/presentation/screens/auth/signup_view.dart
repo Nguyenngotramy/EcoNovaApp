@@ -20,7 +20,7 @@ class _SignUpViewState extends State<SignUpView> {
 
   bool acceptTerms = false;
   bool obscurePassword = true;
-  bool isLoading = false;  // Thêm loading
+  bool isLoading = false; // Thêm loading
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +169,9 @@ class _SignUpViewState extends State<SignUpView> {
                         obscureText: obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
@@ -206,15 +208,20 @@ class _SignUpViewState extends State<SignUpView> {
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: acceptTerms ? Color(0xFF4CAF50) : Colors.transparent,
+                                color: acceptTerms
+                                    ? Color(0xFF4CAF50)
+                                    : Colors.transparent,
                                 border: Border.all(
-                                  color: acceptTerms ? Color(0xFF4CAF50) : Colors.grey.shade400,
+                                  color: acceptTerms
+                                      ? Color(0xFF4CAF50)
+                                      : Colors.grey.shade400,
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: acceptTerms
-                                  ? Icon(Icons.check, size: 16, color: Colors.white)
+                                  ? Icon(Icons.check,
+                                      size: 16, color: Colors.white)
                                   : null,
                             ),
                           ),
@@ -237,7 +244,11 @@ class _SignUpViewState extends State<SignUpView> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: acceptTerms && !isLoading ? _handleRegister : null,
+                          onPressed: acceptTerms && !isLoading
+                              ? () {
+                                  _handleRegister(); // gọi hàm đăng ký
+                                }
+                              : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF2E7D32),
                             disabledBackgroundColor: Colors.grey.shade300,
@@ -308,8 +319,15 @@ class _SignUpViewState extends State<SignUpView> {
   }
 
   Future<void> _handleRegister() async {
-    if (fullNameCtrl.text.isEmpty || emailCtrl.text.isEmpty || passCtrl.text.isEmpty || phoneCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Vui lòng điền đầy đủ')));
+    print(
+        'Register info -> FullName: ${fullNameCtrl.text.trim()}, Email: ${emailCtrl.text.trim()}, Phone: ${phoneCtrl.text.trim()}, Role: ${widget.role}');
+
+    if (fullNameCtrl.text.isEmpty ||
+        emailCtrl.text.isEmpty ||
+        passCtrl.text.isEmpty ||
+        phoneCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Vui lòng điền đầy đủ')));
       return;
     }
 
@@ -317,13 +335,12 @@ class _SignUpViewState extends State<SignUpView> {
     try {
       // Gọi API register
       final data = await AuthService.register(
-        fullNameCtrl.text.trim(),  // Username
-        emailCtrl.text.trim(),
-        phoneCtrl.text.trim(),
-        passCtrl.text,
-        licenseCtrl.text.trim(),
-        widget.role,
-      );
+          fullNameCtrl.text.trim(), // Username
+          emailCtrl.text.trim(),
+          phoneCtrl.text.trim(),
+          passCtrl.text,
+          licenseCtrl.text.trim(),
+          widget.role.toLowerCase());
 
       // Navigate OTP với userId
       Navigator.push(
@@ -331,13 +348,14 @@ class _SignUpViewState extends State<SignUpView> {
         MaterialPageRoute(
           builder: (context) => OTPVerificationView(
             phoneNumber: phoneCtrl.text.trim(),
-            role: widget.role,
-            userId: data['userId'],  // Truyền userId
+            role: widget.role.toLowerCase(),
+            userId: data['userId'], // Truyền userId
           ),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
     setState(() => isLoading = false);
   }

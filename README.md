@@ -1,4 +1,4 @@
-# AgriConnect - Ứng Dụng Bán Nông Sản Việt Nam
+# Econova - Ứng Dụng Bán Nông Sản Việt Nam
 
 ## Giới Thiệu
 **Tên Đề Tài:** Xây dựng ứng dụng đa nền tảng bán nông sản Việt Nam  
