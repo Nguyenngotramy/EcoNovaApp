@@ -15,14 +15,27 @@ class _SignInViewState extends State<SignInView> {
   bool showPassword = false;
   bool rememberMe = false;
   bool isLoginTab = true; // true = Login, false = Register
+  String? errorMessage; // Lưu message lỗi
 
   Future<void> signIn() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      errorMessage = null; // reset lỗi cũ
+    });
     try {
-      await AuthService.login(emailCtrl.text.trim(), passCtrl.text);  // Gọi API
-      Navigator.pushReplacementNamed(context, '/role');  // Hoặc home dựa role từ prefs
+      final data =
+          await AuthService.login(emailCtrl.text.trim(), passCtrl.text);
+      // Kiểm tra message từ backend
+      if (data['message'] != 'Login successful') {
+        setState(() {
+          errorMessage = data['message'] ?? 'Login failed';
+        });
+      } else {
+        Navigator.pushReplacementNamed(context, '/role');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
     setState(() => isLoading = false);
   }
@@ -75,7 +88,8 @@ class _SignInViewState extends State<SignInView> {
                         // Back button
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white.withOpacity(0.2),
                           ),
@@ -134,7 +148,8 @@ class _SignInViewState extends State<SignInView> {
                             children: [
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => isLoginTab = true),
+                                  onTap: () =>
+                                      setState(() => isLoginTab = true),
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: isLoginTab
@@ -144,7 +159,8 @@ class _SignInViewState extends State<SignInView> {
                                       boxShadow: isLoginTab
                                           ? [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.1),
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -304,7 +320,8 @@ class _SignInViewState extends State<SignInView> {
                                   child: Checkbox(
                                     value: rememberMe,
                                     onChanged: (value) {
-                                      setState(() => rememberMe = value ?? false);
+                                      setState(
+                                          () => rememberMe = value ?? false);
                                     },
                                     activeColor: const Color(0xFF2E7D32),
                                     shape: RoundedRectangleBorder(
@@ -374,6 +391,19 @@ class _SignInViewState extends State<SignInView> {
                                   ),
                           ),
                         ),
+                        if (errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
 
                         const SizedBox(height: 24),
 
@@ -415,7 +445,8 @@ class _SignInViewState extends State<SignInView> {
                                   ),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   side: BorderSide(
                                     color: Colors.grey.shade300,
                                     width: 1.5,
@@ -433,8 +464,8 @@ class _SignInViewState extends State<SignInView> {
                                   // TODO: Implement Apple sign in
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content:
-                                          Text("Apple sign in not implemented yet"),
+                                      content: Text(
+                                          "Apple sign in not implemented yet"),
                                     ),
                                   );
                                 },
@@ -452,7 +483,8 @@ class _SignInViewState extends State<SignInView> {
                                   ),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   side: BorderSide(
                                     color: Colors.grey.shade300,
                                     width: 1.5,
