@@ -5,13 +5,13 @@ import 'dart:async';
 class OTPVerificationView extends StatefulWidget {
   final String phoneNumber;
   final String role;
-  final String userId;  // Thêm userId từ register
+  final String userId; // Thêm userId từ register
 
   const OTPVerificationView({
     super.key,
     required this.phoneNumber,
     required this.role,
-    required this.userId,  // Required
+    required this.userId, // Required
   });
 
   @override
@@ -19,12 +19,13 @@ class OTPVerificationView extends StatefulWidget {
 }
 
 class _OTPVerificationViewState extends State<OTPVerificationView> {
-  final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> otpControllers =
+      List.generate(6, (_) => TextEditingController());
   final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
 
-  int remainingSeconds = 60;  // Tăng lên 60s
+  int remainingSeconds = 60; // Tăng lên 60s
   Timer? timer;
-  bool isVerifying = false;  // Loading verify
+  bool isVerifying = false; // Loading verify
 
   @override
   void initState() {
@@ -184,7 +185,8 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
 
                       // Resend code (giữ nguyên)
                       TextButton(
-                        onPressed: remainingSeconds == 0 ? () => startTimer() : null,
+                        onPressed:
+                            remainingSeconds == 0 ? () => startTimer() : null,
                         child: Text(
                           remainingSeconds > 0
                               ? 'Send code again  00:${remainingSeconds.toString().padLeft(2, '0')}'
@@ -215,9 +217,9 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     String otp = otpControllers.map((c) => c.text).join();
     if (otp.length != 6) return;
 
-    setState(() => isVerifying = true);  // Loading
+    setState(() => isVerifying = true); // Loading
     try {
-      await AuthService.verifyOtp(widget.userId, otp);  // Gọi API
+      await AuthService.verifyOtp(widget.userId, otp); // Gọi API
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Xác thực thành công!'),
@@ -226,7 +228,8 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
       );
 
       // Navigate dựa role (token đã lưu)
-      if (widget.role == "Buyer") {
+      print("User role: ${widget.role}");
+      if (widget.role == "buyer") {
         Navigator.pushReplacementNamed(context, "/buyerHome");
       } else if (widget.role == "Seller") {
         Navigator.pushReplacementNamed(context, "/sellerHome");
@@ -234,7 +237,8 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
         Navigator.pushReplacementNamed(context, "/shipperHome");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
     setState(() => isVerifying = false);
   }

@@ -6,21 +6,24 @@ const router = express.Router();
 
 // Register (B-01: full name stub username, license, role từ Flutter)
 router.post('/register', async (req, res) => {
-  try {
-    const { username, email, phone, password, license, role } = req.body;
-    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
-    if (existingUser) return res.status(400).json({ error: 'User tồn tại' });
+    try {
+        const { username, email, phone, password, license, role } = req.body;
+        const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+        if (existingUser) return res.status(400).json({ error: 'User tồn tại' });
 
-    const user = new User({ username, email, phone, password, license, role });
-    await user.save();
+        const user = new User({ username, email, phone, password, license, role });
 
-    const otp = user.generateOTP();
-    console.log(`OTP cho ${phone}: ${otp}`);  // Stub - thay SMS/Email real (Twilio)
 
-    res.status(201).json({ message: 'Đăng ký OK, kiểm tra OTP', userId: user._id });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+        const otp = user.generateOTP();
+        await user.save();
+        console.log(`OTP cho ${phone}: ${otp}`);
+        res.status(201).json({
+            message: 'Đăng ký OK, kiểm tra OTP',
+            userId: user._id
+        });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
 
 // Verify OTP (kích hoạt user, trả token)
@@ -47,24 +50,41 @@ router.post('/verify-otp', async (req, res) => {
 // Login (B-02: email/phone, multi-device stub)
 router.post('/login', async (req, res) => {
   try {
-    const { email, phone, password, deviceId } = req.body;
-    const user = await User.findOne({ $or: [{ email }, { phone }] });
+    const { email, password, deviceId } = req.body;
+
+    // Tìm user chỉ bằng email
+    const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password)) || !user.isVerified) {
       return res.status(401).json({ error: 'Sai thông tin hoặc chưa verify' });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role, deviceId }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role, deviceId },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     user.devices.push({ deviceId, lastActive: new Date(), token });
-    user.devices = user.devices.slice(-3);  // Max 3 devices
+    user.devices = user.devices.slice(-3); // Max 3 devices
     await user.save();
 
     // Auto-logout stub (idle 30p)
     setTimeout(() => console.log(`Auto-logout ${deviceId}`), 30 * 60 * 1000);
 
-    res.json({ token, user: { id: user._id, username: user.username, role: user.role } });
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      }
+    });
+
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
+
 
 module.exports = router;
