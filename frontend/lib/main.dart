@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/screens/admin/admin_dashboard_screen.dart';
@@ -24,9 +23,18 @@ import 'presentation/screens/user/my_orders_screen.dart';
 import 'presentation/screens/user/myaccount_screen.dart';
 import 'presentation/screens/user/search_screen.dart';
 import 'presentation/widgets/user/component/bottom_nav_bar.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -39,15 +47,15 @@ class MyApp extends StatelessWidget {
       initialRoute: '/onboarding',
       routes: {
         '/onboarding': (context) => const OnboardingScreen(),
-        '/role': (context) => const RoleSelectionScreen(),
+        // '/role': (context) => const RoleSelectionScreen(),
         '/user': (context) => const MainScreen(),
         '/seller': (context) => const MainScreenSeller(),
         '/shipper': (context) => const MainScreenShipper(),
         '/admin': (context) => const MainScreenAdmin(),
-         "/signin": (context) => const SignInView(),
+        "/signin": (context) => const SignInView(),
         "/selectRole": (context) => const SelectRoleView(),
       },
-       onGenerateRoute: (settings) {
+      onGenerateRoute: (settings) {
         if (settings.name == "/signup") {
           final role = settings.arguments as String;
 
@@ -58,148 +66,6 @@ class MyApp extends StatelessWidget {
         return null;
       },
     );
-  }
-}
-
-// Màn hình chọn role: User, Seller, Shipper, Admin
-class RoleSelectionScreen extends StatelessWidget {
-  const RoleSelectionScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.green[50],
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.eco,
-                  size: 120,
-                  color: Colors.green,
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Chào mừng đến với EcoNova!',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Chọn vai trò của bạn để bắt đầu demo',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 48),
-                
-                // Nút User
-                _buildRoleButton(
-                  context: context,
-                  label: 'Người dùng (User)',
-                  icon: Icons.shopping_bag,
-                  color: Colors.green,
-                  isPrimary: true,
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/user');
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Nút Seller
-                _buildRoleButton(
-                  context: context,
-                  label: 'Người bán (Seller)',
-                  icon: Icons.store,
-                  color: Colors.blue,
-                  isPrimary: false,
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/seller');
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Nút Shipper
-                _buildRoleButton(
-                  context: context,
-                  label: 'Người giao hàng (Shipper)',
-                  icon: Icons.local_shipping,
-                  color: Colors.orange,
-                  isPrimary: false,
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/shipper');
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Nút Admin
-                _buildRoleButton(
-                  context: context,
-                  label: 'Quản trị viên (Admin)',
-                  icon: Icons.admin_panel_settings,
-                  color: Colors.red,
-                  isPrimary: false,
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/admin');
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleButton({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required Color color,
-    required bool isPrimary,
-    required VoidCallback onPressed,
-  }) {
-    if (isPrimary) {
-      return ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          minimumSize: const Size(double.infinity, 60),
-        ),
-      );
-    } else {
-      return OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          side: BorderSide(color: color, width: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          minimumSize: const Size(double.infinity, 60),
-        ),
-      );
-    }
   }
 }
 
@@ -231,21 +97,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('EcoNova - User'),
-        backgroundColor: Colors.green[600],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.switch_account),
-            onPressed: () {
-              Navigator.pushReplacementNamed(
-                context,
-                '/role',
-              );
-            },
-          ),
-        ],
-      ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
@@ -283,21 +134,6 @@ class _MainScreenSellerState extends State<MainScreenSeller> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('EcoNova - Seller'),
-        backgroundColor: Colors.blue[600],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.switch_account),
-            onPressed: () {
-              Navigator.pushReplacementNamed(
-                context,
-                '/role',
-              );
-            },
-          ),
-        ],
-      ),
       body: _pages[_currentIndex],
       bottomNavigationBar: SellerBottomNavBar(
         currentIndex: _currentIndex,
@@ -335,21 +171,6 @@ class _MainScreenShipperState extends State<MainScreenShipper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('EcoNova - Shipper'),
-        backgroundColor: Colors.orange[600],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.switch_account),
-            onPressed: () {
-              Navigator.pushReplacementNamed(
-                context,
-                '/role',
-              );
-            },
-          ),
-        ],
-      ),
       body: _pages[_currentIndex],
       bottomNavigationBar: ShipperBottomNavBar(
         currentIndex: _currentIndex,
@@ -387,21 +208,6 @@ class _MainScreenAdminState extends State<MainScreenAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('EcoNova - Admin'),
-        backgroundColor: Colors.red[600],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.switch_account),
-            onPressed: () {
-              Navigator.pushReplacementNamed(
-                context,
-                '/role',
-              );
-            },
-          ),
-        ],
-      ),
       body: _pages[_currentIndex],
       bottomNavigationBar: AdminBottomNavBar(
         currentIndex: _currentIndex,
@@ -424,7 +230,8 @@ class AdminSettings extends StatelessWidget {
         children: [
           Icon(Icons.settings, size: 80, color: Colors.red),
           SizedBox(height: 16),
-          Text('Cài đặt', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text('Cài đặt',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
           Text('Cấu hình hệ thống và chính sách.'),
         ],
@@ -453,9 +260,12 @@ class SellerBottomNavBar extends StatelessWidget {
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-        BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Products'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Orders'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard), label: 'Dashboard'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2), label: 'Products'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart), label: 'Orders'),
         BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
@@ -482,10 +292,13 @@ class ShipperBottomNavBar extends StatelessWidget {
       selectedItemColor: Colors.orange,
       unselectedItemColor: Colors.grey,
       items: const [
-       BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-       BottomNavigationBarItem(icon: Icon(Icons.description), label: 'Reports'),
-       BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Deliveries'),
-       BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard), label: 'Dashboard'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.description), label: 'Reports'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.local_shipping), label: 'Deliveries'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }
@@ -510,9 +323,11 @@ class AdminBottomNavBar extends StatelessWidget {
       selectedItemColor: Colors.red,
       unselectedItemColor: Colors.grey,
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Dashboard'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.analytics), label: 'Dashboard'),
         BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long), label: 'Orders'),
         BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reports'),
         BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
       ],

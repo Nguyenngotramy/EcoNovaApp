@@ -218,6 +218,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     if (otp.length != 6) return;
 
     setState(() => isVerifying = true); // Loading
+    print("Role from widget: ${widget.role}");
     try {
       await AuthService.verifyOtp(widget.userId, otp); // Gọi API
       ScaffoldMessenger.of(context).showSnackBar(
@@ -228,13 +229,13 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
       );
 
       // Navigate dựa role (token đã lưu)
-      print("User role: ${widget.role}");
+
       if (widget.role == "buyer") {
-        Navigator.pushReplacementNamed(context, "/buyerHome");
+        Navigator.pushReplacementNamed(context, "/user");
       } else if (widget.role == "Seller") {
-        Navigator.pushReplacementNamed(context, "/sellerHome");
+        Navigator.pushReplacementNamed(context, "/seller");
       } else if (widget.role == "Shipper") {
-        Navigator.pushReplacementNamed(context, "/shipperHome");
+        Navigator.pushReplacementNamed(context, "/shipper");
       }
     } catch (e) {
       ScaffoldMessenger.of(context)

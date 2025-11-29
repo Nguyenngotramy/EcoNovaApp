@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/user/cart/badge_icon_button.dart';
 import 'cart_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/user_provider.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -12,14 +13,11 @@ class MyAccountScreen extends StatefulWidget {
 }
 
 class _MyAccountScreenState extends State<MyAccountScreen> {
-  // Mock user data
-  final String userName = 'NGUYỄN NGÔ TRÀ MY';
-  final String userPhone = '0810396**';
-  final String userEmail = 'NguyenMy2025@Gmail.Com';
   final String userAvatar = 'assets/images/user_avatar.png';
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -42,16 +40,16 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
           ),
           Stack(
             children: [
-            BadgeIconButton(
-            icon: Icons.shopping_cart_outlined,
-            badgeCount: 1,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartScreen()),
-              );
-            },
-          ),
+              BadgeIconButton(
+                icon: Icons.shopping_cart_outlined,
+                badgeCount: 1,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(width: 8),
@@ -123,7 +121,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   const SizedBox(height: 16),
                   // User name
                   Text(
-                    userName,
+                    user!['username'] ?? 'Người dùng',
                     style: AppTheme.heading2.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -132,7 +130,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   const SizedBox(height: 8),
                   // User contact info
                   Text(
-                    '$userPhone - $userEmail',
+                    '${user['phone']} - ${user['email']}',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondary,
                     ),

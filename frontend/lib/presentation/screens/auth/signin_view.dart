@@ -1,5 +1,7 @@
 import 'package:eco_nova_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:eco_nova_app/providers/user_provider.dart';
 
 class SignInView extends StatefulWidget {
   const SignInView({super.key});
@@ -31,7 +33,26 @@ class _SignInViewState extends State<SignInView> {
           errorMessage = data['message'] ?? 'Login failed';
         });
       } else {
-        Navigator.pushReplacementNamed(context, '/role');
+        Provider.of<UserProvider>(context, listen: false).setUser(data['user']);
+        final user = Provider.of<UserProvider>(context, listen: false).user;
+        print(user);
+        switch (data['user']['role']) {
+          case 'buyer':
+            Navigator.pushReplacementNamed(context, '/user');
+            break;
+          case 'seller':
+            Navigator.pushReplacementNamed(context, '/seller');
+            break;
+          case 'shipper':
+            Navigator.pushReplacementNamed(context, '/shipper');
+            break;
+          case 'admin':
+            Navigator.pushReplacementNamed(context, '/admin');
+            break;
+          default:
+            Navigator.pushReplacementNamed(context, '/role');
+            break;
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context)

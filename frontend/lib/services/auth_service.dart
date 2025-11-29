@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 
 class AuthService {
   static const String baseUrl =
-      'http://192.168.10.210:5000/api'; // Emulator Android, thay IP real cho device
+      'http://192.168.1.187:5000/api'; // Emulator Android, thay IP real cho device
   static final Uuid _uuid = Uuid();
 
   static Future<Map<String, dynamic>> register(
@@ -62,7 +62,6 @@ class AuthService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'email': emailOrPhone,
-        'phone': emailOrPhone,
         'password': password,
         'deviceId': deviceId,
       }),
