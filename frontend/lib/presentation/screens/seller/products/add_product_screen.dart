@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../../core/theme/app_theme.dart';
-import '../../../widgets/seller/components/form_components.dart';  // Thêm dependency: flutter pub add image_picker
+import '../../../../core/constants/api_constants.dart';
+import '../../../widgets/seller/components/form_components.dart';
+import '../../../../services/auth_service.dart'; // Import AuthService
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -16,8 +20,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _originalPriceController = TextEditingController();  // Thêm giá gốc
-  final TextEditingController _discountController = TextEditingController();  // Thêm chiết khấu (%)
+  final TextEditingController _originalPriceController = TextEditingController();
+  final TextEditingController _discountController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _skuController = TextEditingController();
@@ -26,41 +30,265 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String? _selectedUnit;
   bool _isOrganic = false;
   bool _isLoading = false;
+  bool _isLoadingCategories = false;
   
-  List<File> _images = [];  // Thay _imageUrls bằng list File để hỗ trợ pick real images
-
-  final List<Map<String, String>> _categories = [
-    {'id': 'fruit', 'name': 'Trái cây'},
-    {'id': 'vegetable', 'name': 'Rau xanh'},
-    {'id': 'grain', 'name': 'Ngũ cốc'},
-    {'id': 'herb', 'name': 'Rau gia vị'},
-    {'id': 'mushroom', 'name': 'Nấm'},
-  ];
+  List<File> _images = [];
+  List<Map<String, dynamic>> _categories = [];
 
   final List<String> _units = ['kg', 'gram', 'túi', 'bó', 'trái'];
+  final ImagePicker _picker = ImagePicker();
 
-  final ImagePicker _picker = ImagePicker();  // Khởi tạo ImagePicker
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _originalPriceController.dispose();  // Dispose mới
-    _discountController.dispose();  // Dispose mới
+    _originalPriceController.dispose();
+    _discountController.dispose();
     _stockController.dispose();
     _weightController.dispose();
     _skuController.dispose();
     super.dispose();
   }
 
+  // ===== LOAD CATEGORIES TỪ API =====
+  Future<void> _loadCategories() async {
+    setState(() => _isLoadingCategories = true);
+    
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        _showSnackBar('Vui lòng đăng nhập lại', isError: true);
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/seller/categories?isActive=true'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _categories = List<Map<String, dynamic>>.from(data['data']['categories']);
+        });
+      } else {
+        final error = json.decode(response.body);
+        _showSnackBar('Lỗi: ${error['message']}', isError: true);
+      }
+    } catch (e) {
+      _showSnackBar('Lỗi khi tải danh mục: $e', isError: true);
+    } finally {
+      setState(() => _isLoadingCategories = false);
+    }
+  }
+
+  // ===== MỞ DIALOG THÊM CATEGORY =====
+  Future<void> _showAddCategoryDialog() async {
+    final TextEditingController categoryNameController = TextEditingController();
+    final TextEditingController categoryDescController = TextEditingController();
+    File? categoryIcon;
+    bool isSaving = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Thêm danh mục mới'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon picker
+                    GestureDetector(
+                      onTap: () async {
+                        final XFile? pickedFile = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 80,
+                          maxWidth: 512,
+                          maxHeight: 512,
+                        );
+                        if (pickedFile != null) {
+                          setDialogState(() {
+                            categoryIcon = File(pickedFile.path);
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[400]!),
+                        ),
+                        child: categoryIcon != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(categoryIcon!, fit: BoxFit.cover),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_photo_alternate, size: 32, color: Colors.grey[600]),
+                                  const SizedBox(height: 4),
+                                  Text('Icon', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Tên danh mục
+                    TextField(
+                      controller: categoryNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tên danh mục *',
+                        hintText: 'VD: Trái cây tươi',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Mô tả
+                    TextField(
+                      controller: categoryDescController,
+                      decoration: const InputDecoration(
+                        labelText: 'Mô tả',
+                        hintText: 'Mô tả ngắn về danh mục',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    if (categoryNameController.text.trim().isEmpty) {
+                      _showSnackBar('Vui lòng nhập tên danh mục', isError: true);
+                      return;
+                    }
+
+                    setDialogState(() => isSaving = true);
+
+                    try {
+                      final token = await AuthService.getToken();
+                      if (token == null) {
+                        _showSnackBar('Vui lòng đăng nhập lại', isError: true);
+                        return;
+                      }
+
+                      // Upload icon nếu có
+                      String? iconUrl;
+                      if (categoryIcon != null) {
+                        iconUrl = await _uploadImage(categoryIcon!);
+                      }
+
+                      // Gọi API tạo category
+                      final response = await http.post(
+                        Uri.parse('${ApiConstants.baseUrl}/seller/categories'),
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': 'Bearer $token',
+                        },
+                        body: json.encode({
+                          'name': categoryNameController.text.trim(),
+                          'description': categoryDescController.text.trim(),
+                          'icon': iconUrl,
+                          'isActive': true,
+                        }),
+                      );
+
+                      if (response.statusCode == 201) {
+                        final newCategory = json.decode(response.body)['data'];
+                        
+                        // Thêm vào list và chọn luôn
+                        setState(() {
+                          _categories.add(newCategory);
+                          _selectedCategory = newCategory['_id'];
+                        });
+
+                        Navigator.pop(dialogContext);
+                        _showSnackBar('Thêm danh mục thành công!');
+                      } else {
+                        final error = json.decode(response.body);
+                        _showSnackBar('Lỗi: ${error['message']}', isError: true);
+                      }
+                    } catch (e) {
+                      _showSnackBar('Có lỗi xảy ra: $e', isError: true);
+                    } finally {
+                      setDialogState(() => isSaving = false);
+                    }
+                  },
+                  child: isSaving 
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Thêm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ===== UPLOAD ẢNH =====
+  Future<String?> _uploadImage(File imageFile) async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        _showSnackBar('Vui lòng đăng nhập lại', isError: true);
+        return null;
+      }
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/upload/image'),
+      );
+      
+      request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      var response = await request.send();
+      
+      if (response.statusCode == 200) {
+        var responseData = await response.stream.bytesToString();
+        var data = json.decode(responseData);
+        return data['url'];
+      }
+      return null;
+    } catch (e) {
+      print('Upload image failed: $e');
+      return null;
+    }
+  }
+
   Future<void> _handleAddImage() async {
     try {
       final List<XFile>? pickedImages = await _picker.pickMultiImage(
-        imageQuality: 80,  // Nén ảnh để tối ưu
+        imageQuality: 80,
         maxWidth: 800,
         maxHeight: 800,
-        limit: 5 - _images.length,  // Giới hạn tổng 5 ảnh
+        limit: 5 - _images.length,
       );
       if (pickedImages != null && pickedImages.isNotEmpty) {
         setState(() {
@@ -68,9 +296,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi chọn ảnh: $e')),
-      );
+      _showSnackBar('Lỗi khi chọn ảnh: $e', isError: true);
     }
   }
 
@@ -80,35 +306,87 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
   }
 
-  void _handleSave() async {
-    if (_formKey.currentState!.validate()) {
-      if (_images.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng thêm ít nhất 1 ảnh sản phẩm'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+  // ===== LƯU SẢN PHẨM =====
+  Future<void> _handleSave() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    if (_images.isEmpty) {
+      _showSnackBar('Vui lòng thêm ít nhất 1 ảnh sản phẩm', isError: true);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        _showSnackBar('Vui lòng đăng nhập lại', isError: true);
         return;
       }
 
-      setState(() => _isLoading = true);
-
-      // Mock API call (thay bằng upload ảnh thật lên Firebase/Cloudinary)
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() => _isLoading = false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Thêm sản phẩm thành công!'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
-        Navigator.of(context).pop(true);
+      // 1. Upload tất cả ảnh
+      List<String> uploadedUrls = [];
+      for (var image in _images) {
+        final url = await _uploadImage(image);
+        if (url != null) uploadedUrls.add(url);
       }
+
+      if (uploadedUrls.isEmpty) {
+        _showSnackBar('Không thể upload ảnh', isError: true);
+        return;
+      }
+
+      // 2. Tạo product payload
+      final productData = {
+        'name': _nameController.text,
+        'description': _descriptionController.text,
+        'category': _selectedCategory,
+        'price': double.parse(_priceController.text),
+        'originalPrice': _originalPriceController.text.isNotEmpty 
+            ? double.parse(_originalPriceController.text) 
+            : null,
+        'discount': _discountController.text.isNotEmpty 
+            ? double.parse(_discountController.text) 
+            : null,
+        'stock': int.parse(_stockController.text),
+        'weight': double.parse(_weightController.text),
+        'unit': _selectedUnit,
+        'sku': _skuController.text.isNotEmpty ? _skuController.text : null,
+        'isOrganic': _isOrganic,
+        'images': uploadedUrls,
+      };
+
+      // 3. Gửi lên backend
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/seller/products'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(productData),
+      );
+
+      if (response.statusCode == 201) {
+        _showSnackBar('Thêm sản phẩm thành công!');
+        if (mounted) Navigator.of(context).pop(true);
+      } else {
+        final error = json.decode(response.body);
+        _showSnackBar('Lỗi: ${error['message']}', isError: true);
+      }
+    } catch (e) {
+      _showSnackBar('Có lỗi xảy ra: $e', isError: true);
+    } finally {
+      setState(() => _isLoading = false);
     }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppTheme.errorColor : AppTheme.successColor,
+      ),
+    );
   }
 
   @override
@@ -132,16 +410,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Images Section (cập nhật để dùng File)
+                    // ===== HÌNH ẢNH =====
                     MultiImagePicker(
-                      images: _images,  // Thay imageUrls bằng images (List<File>)
+                      images: _images,
                       onAddImage: _handleAddImage,
                       onRemoveImage: _handleRemoveImage,
                     ),
                     
-                    const SectionDivider(title: 'THÔNG TIN CỦA BẢN'),
+                    const SectionDivider(title: 'THÔNG TIN CƠ BẢN'),
                     
-                    // Product Name
+                    // Tên sản phẩm
                     CustomTextField(
                       label: 'Tên sản phẩm',
                       hint: 'VD: Cà chua cherry',
@@ -155,30 +433,49 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Category
-                    CustomDropdownField<String>(
-                      label: 'Danh mục',
-                      value: _selectedCategory,
-                      hint: 'Chọn danh mục',
-                      items: _categories.map((category) {
-                        return DropdownMenuItem<String>(
-                          value: category['id'],
-                          child: Text(category['name']!),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedCategory = value);
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Vui lòng chọn danh mục';
-                        }
-                        return null;
-                      },
+                    // ===== DANH MỤC (CÓ NÚT THÊM) =====
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _isLoadingCategories
+                              ? const Center(child: CircularProgressIndicator())
+                              : CustomDropdownField<String>(
+                                  label: 'Danh mục',
+                                  value: _selectedCategory,
+                                  hint: 'Chọn danh mục',
+                                  items: _categories.map((category) {
+                                    return DropdownMenuItem<String>(
+                                      value: category['_id'],
+                                      child: Text(category['name']),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() => _selectedCategory = value);
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Vui lòng chọn danh mục';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Nút thêm danh mục
+                        Container(
+                          margin: const EdgeInsets.only(top: 24),
+                          child: IconButton(
+                            onPressed: _showAddCategoryDialog,
+                            icon: const Icon(Icons.add_circle, color: AppTheme.primary),
+                            iconSize: 32,
+                            tooltip: 'Thêm danh mục mới',
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     
-                    // Description
+                    // Mô tả
                     CustomTextField(
                       label: 'Mô tả sản phẩm',
                       hint: 'Nhập mô tả chi tiết về sản phẩm',
@@ -193,7 +490,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Organic checkbox
+                    // Checkbox Organic
                     Row(
                       children: [
                         Checkbox(
@@ -203,29 +500,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           },
                           activeColor: AppTheme.primary,
                         ),
-                        Text(
-                          'Sản phẩm hữu cơ',
-                          style: AppTheme.bodyMedium,
-                        ),
+                        Text('Sản phẩm hữu cơ', style: AppTheme.bodyMedium),
                       ],
                     ),
                     
                     const SectionDivider(title: 'GIÁ & TỒN KHO'),
                     
-                    // Price
+                    // Giá bán
                     CustomTextField(
-                      label: 'Giá bán (giá khuyến mãi)',
+                      label: 'Giá bán',
                       hint: 'VD: 40000',
                       controller: _priceController,
                       keyboardType: TextInputType.number,
                       suffixIcon: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'VNĐ',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
+                        child: Text('VNĐ', style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -239,7 +528,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Weight & Unit
+                    // Khối lượng & Đơn vị
                     Row(
                       children: [
                         Expanded(
@@ -285,7 +574,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Stock
+                    // Tồn kho
                     CustomTextField(
                       label: 'Số lượng tồn kho',
                       hint: 'VD: 50',
@@ -310,11 +599,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       controller: _skuController,
                     ),
 
-                    // Section Khuyến mãi (mới)
                     const SectionDivider(title: 'KHUYẾN MÃI'),
-                    const SizedBox(height: 16),
                     
-                    // Original Price
+                    // Giá gốc
                     CustomTextField(
                       label: 'Giá gốc (nếu có khuyến mãi)',
                       hint: 'VD: 50000',
@@ -322,12 +609,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       keyboardType: TextInputType.number,
                       suffixIcon: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'VNĐ',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
+                        child: Text('VNĐ', style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
                       ),
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
@@ -345,7 +627,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Discount
+                    // Chiết khấu
                     CustomTextField(
                       label: 'Chiết khấu (%)',
                       hint: 'VD: 20',
@@ -353,12 +635,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       keyboardType: TextInputType.number,
                       suffixIcon: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          '%',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
+                        child: Text('%', style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
                       ),
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
@@ -395,7 +672,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 }
 
-// Cập nhật MultiImagePicker để hỗ trợ List<File> (thêm code này nếu widget chưa có)
+// ===== MULTI IMAGE PICKER WIDGET =====
 class MultiImagePicker extends StatelessWidget {
   final List<File> images;
   final VoidCallback onAddImage;
@@ -419,25 +696,27 @@ class MultiImagePicker extends StatelessWidget {
           height: 120,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: images.length + 1,  // +1 cho nút add
+            itemCount: images.length + 1,
             itemBuilder: (context, index) {
               if (index == images.length) {
-                // Nút thêm ảnh
                 return GestureDetector(
-                  onTap: onAddImage,
+                  onTap: images.length < 5 ? onAddImage : null,
                   child: Container(
                     width: 100,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: images.length < 5 ? Colors.grey[200] : Colors.grey[300],
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                    child: Icon(
+                      Icons.add_a_photo, 
+                      size: 40, 
+                      color: images.length < 5 ? Colors.grey : Colors.grey[400]
+                    ),
                   ),
                 );
               }
-              // Hiển thị ảnh
               return Container(
                 width: 100,
                 margin: const EdgeInsets.only(right: 8),
@@ -445,12 +724,7 @@ class MultiImagePicker extends StatelessWidget {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        images[index],
-                        fit: BoxFit.cover,
-                        width: 100,
-                        height: 120,
-                      ),
+                      child: Image.file(images[index], fit: BoxFit.cover, width: 100, height: 120),
                     ),
                     Positioned(
                       top: 0,
@@ -459,10 +733,7 @@ class MultiImagePicker extends StatelessWidget {
                         onTap: () => onRemoveImage(index),
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                           child: const Icon(Icons.close, color: Colors.white, size: 16),
                         ),
                       ),
