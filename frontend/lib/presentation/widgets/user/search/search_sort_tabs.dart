@@ -1,73 +1,61 @@
+// lib/presentation/widgets/user/search/search_sort_tabs.dart
 import 'package:flutter/material.dart';
-
 import '../../../../core/theme/app_theme.dart';
 
-class SearchSortTabs extends StatefulWidget {
-  const SearchSortTabs({Key? key}) : super(key: key);
+class SearchSortTabs extends StatelessWidget {
+  final String currentSort;
+  final Function(String) onSortChanged;
 
-  @override
-  State<SearchSortTabs> createState() => _SearchSortTabsState();
-}
-
-class _SearchSortTabsState extends State<SearchSortTabs> {
-  int _selectedIndex = 0;
-  final List<String> _tabs = ['Phù hợp\nnhất', 'Giá thấp', 'Giá Cao', 'Đánh giá'];
+  const SearchSortTabs({
+    Key? key,
+    required this.currentSort,
+    required this.onSortChanged,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Text(
-            'Sắp xếp theo:',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Row(
-              children: List.generate(_tabs.length, (index) {
-                return Expanded(
-                  child: _buildTab(_tabs[index], index),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final tabs = [
+      {'label': 'Mới nhất', 'sort': '-createdAt'},
+      {'label': 'Giá thấp', 'sort': 'price'},
+      {'label': 'Giá cao', 'sort': '-price'},
+      {'label': 'Đánh giá', 'sort': '-rating'},
+    ];
 
-  Widget _buildTab(String label, int index) {
-    final isSelected = index == _selectedIndex;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? AppTheme.primary : Colors.transparent,
-              width: 2,
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+      ),
+      child: Row(
+        children: tabs.map((tab) {
+          final isSelected = currentSort == tab['sort'];
+          return Expanded(
+            child: InkWell(
+              onTap: () => onSortChanged(tab['sort']!),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isSelected ? AppTheme.primary : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    tab['label']!,
+                    style: TextStyle(
+                      color: isSelected ? AppTheme.primary : Colors.grey,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTheme.bodySmall.copyWith(
-            color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            height: 1.2,
-          ),
-        ),
+          );
+        }).toList(),
       ),
     );
   }

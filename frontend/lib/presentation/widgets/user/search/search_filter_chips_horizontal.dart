@@ -1,85 +1,50 @@
+// lib/presentation/widgets/user/search/search_filter_chips_horizontal.dart
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class SearchFilterChipsHorizontal extends StatefulWidget {
-  const SearchFilterChipsHorizontal({Key? key}) : super(key: key);
+class SearchFilterChipsHorizontal extends StatelessWidget {
+  final Map<String, VoidCallback> activeFilters;
+  final VoidCallback? onClear;
 
-  @override
-  State<SearchFilterChipsHorizontal> createState() => _SearchFilterChipsHorizontalState();
-}
-
-class _SearchFilterChipsHorizontalState extends State<SearchFilterChipsHorizontal> {
-  final List<String> _filters = ['Hoàn thành', 'organic', 'Đà Lạt', '<10km'];
-  final List<bool> _selected = [true, false, false, false];
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          return FilterChipItem(
-            label: _filters[index],
-            isSelected: _selected[index],
-            onTap: () {
-              setState(() {
-                _selected[index] = !_selected[index];
-              });
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class FilterChipItem extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const FilterChipItem({
+  const SearchFilterChipsHorizontal({
     Key? key,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
+    required this.activeFilters,
+    this.onClear,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppTheme.primary : AppTheme.borderColor,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isSelected)
-              const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.check, size: 16, color: Colors.white),
-              ),
-            Text(
-              label,
-              style: AppTheme.bodySmall.copyWith(
-                color: isSelected ? Colors.white : AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ...activeFilters.entries.map((entry) => Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: Text(entry.key),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: entry.value,
+                  backgroundColor: AppTheme.primary.withOpacity(0.1),
+                  labelStyle: const TextStyle(color: AppTheme.primary, fontSize: 12),
+                ),
+              )),
+          if (onClear != null) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onClear,
+              child: Text(
+                'Xóa tất cả',
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

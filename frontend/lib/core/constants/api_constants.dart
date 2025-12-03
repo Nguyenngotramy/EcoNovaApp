@@ -34,7 +34,6 @@ class ApiConstants {
   static String get register => '$baseUrl/auth/register';
   static String get sellerProducts => '$baseUrl/seller/products';
   static String get sellerCategories => '$baseUrl/seller/categories';
-  static String get uploadImage => '$baseUrl/upload/image';
   static String get customerProducts => '$baseUrl/products';
   
   // Method để lấy URL với path tùy chỉnh

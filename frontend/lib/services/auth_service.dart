@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.100.144:5000/api';
-  static final Uuid _uuid = const Uuid();
+  static const String baseUrl =
+      'http://192.168.100.144:5000/api'; // Emulator Android, thay IP real cho device
+  static final Uuid _uuid = Uuid();
 
-  // Lấy token từ SharedPreferences
+// Lấy token từ SharedPreferences
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
@@ -24,14 +25,6 @@ class AuthService {
     final token = await getToken();
     return token != null && token.isNotEmpty;
   }
-
-  // Đăng xuất
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('role');
-  }
-
   static Future<Map<String, dynamic>> register(
     String username,
     String email,
@@ -40,7 +33,7 @@ class AuthService {
     String license,
     String role,
   ) async {
-    final deviceId = _uuid.v4();
+    final deviceId = _uuid.v4(); // Unique device
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
@@ -86,7 +79,6 @@ class AuthService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'email': emailOrPhone,
-        'phone': emailOrPhone,
         'password': password,
         'deviceId': deviceId,
       }),

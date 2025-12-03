@@ -1,13 +1,15 @@
+// lib/presentation/widgets/user/productdetail/product_image_carousel.dart (Updated to accept full images list)
 import 'package:flutter/material.dart';
+import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 
 class ProductImageCarousel extends StatefulWidget {
   final String heroTag;
-  final String mainImage;
+  final List<String> images; // Full list from product
 
   const ProductImageCarousel({
     Key? key,
     required this.heroTag,
-    required this.mainImage,
+    required this.images,
   }) : super(key: key);
 
   @override
@@ -16,17 +18,12 @@ class ProductImageCarousel extends StatefulWidget {
 
 class _ProductImageCarouselState extends State<ProductImageCarousel> {
   int _currentIndex = 0;
-  late List<String> images;
+  late List<String> _images;
 
   @override
   void initState() {
     super.initState();
-    // Main image + additional images
-    images = [
-      widget.mainImage,
-      'https://picsum.photos/400/300?random=2',
-      'https://picsum.photos/400/300?random=3',
-    ];
+    _images = widget.images.isNotEmpty ? widget.images : ['https://via.placeholder.com/400x300.png?text=No+Image'];
   }
 
   @override
@@ -37,23 +34,18 @@ class _ProductImageCarouselState extends State<ProductImageCarousel> {
         SizedBox(
           height: 300,
           child: PageView.builder(
-            itemCount: images.length,
+            itemCount: _images.length,
             onPageChanged: (index) {
               setState(() => _currentIndex = index);
             },
             itemBuilder: (context, index) {
-              if (index == 0) {
-                return Hero(
-                  tag: widget.heroTag,
-                  child: Image.asset(
-                    images[index],
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }
-              return Image.network(
-                images[index],
-                fit: BoxFit.cover,
+              return Hero(
+                tag: '${widget.heroTag}_$index', // Unique tag for each image
+                child: buildProductImage(
+                  imageUrl: _images[index],
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
               );
             },
           ),
@@ -63,7 +55,7 @@ class _ProductImageCarouselState extends State<ProductImageCarousel> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-              images.length,
+              _images.length,
               (index) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 width: 8,

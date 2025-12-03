@@ -1,58 +1,47 @@
+// lib/presentation/widgets/user/search/search_product_grid.dart
 import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../screens/user/product_detail_screen.dart';
-import '../../../../data/models/product_user.dart'; // Import Product model
+import '../../../../data/models/product_user.dart';
 
 class SearchProductGrid extends StatelessWidget {
-  const SearchProductGrid({Key? key}) : super(key: key);
+  final List<Product> products;
+  final bool isLoadingMore;
+
+  const SearchProductGrid({
+    Key? key,
+    required this.products,
+    this.isLoadingMore = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Mock data using Product model (replace with real data from search service later)
-    final products = List.generate(4, (index) {
-      return Product(
-        id: 'mock_${index}',
-        name: 'Cà chua bi organic',
-        description: 'Mô tả ngắn',
-        detailedDescription: 'Chi tiết sản phẩm cà chua bi organic tươi ngon.',
-        category: Category(id: '1', name: 'Rau củ'),
-        seller: Seller(id: '1', username: 'Organic Farm', email: 'organic@farm.com'),
-        price: 45000 + (index * 10000), // Vary price
-        originalPrice: index % 2 == 0 ? 65000.0 : null,
-        discount: index % 2 == 0 ? 18 : 0,
-        stock: 100,
-        weight: 1.0,
-        unit: 'kg',
-        isOrganic: true,
-        isFeatured: true,
-        badges: ['VietGAP'],
-        images: ['https://via.placeholder.com/300x300.png?text=Cà+Chua+Bi'], // Use real Cloudinary URLs in production
-        rating: 4.9,
-        reviewCount: 128,
-        soldCount: 50,
-        status: 'active',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-    });
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.65,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final product = products[index];
-          return SearchProductCard(product: product);
-        },
+      child: Column(
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.65,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return SearchProductCard(product: product);
+            },
+          ),
+          if (isLoadingMore)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -68,9 +57,9 @@ class SearchProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heroTag = product.id; // Use product.id for unique hero tag
+    final heroTag = product.id;
     final imageUrl = product.images.isNotEmpty ? product.images.first : '';
-    final distance = '1.8 km'; // Mock distance; integrate real location service if needed
+    final distance = '1.8 km'; // Mock; replace with real data
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -87,7 +76,7 @@ class SearchProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppTheme.borderColor),
         ),
@@ -204,7 +193,7 @@ class SearchProductCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Handle "Mua Ngay" action (e.g., add to cart)
+                        // TODO: Handle "Mua Ngay" (add to cart)
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,

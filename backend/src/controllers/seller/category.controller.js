@@ -46,7 +46,7 @@ exports.getCategoryById = async (req, res) => {
 // Tạo category mới
 exports.createCategory = async (req, res) => {
   try {
-    const { name, description, icon, isActive } = req.body;
+    const { name, description, isActive } = req.body; // Không lấy icon từ body, dùng req.file
     const userId = req.user.id;
 
     // Validate
@@ -63,11 +63,18 @@ exports.createCategory = async (req, res) => {
       return errorResponse(res, 'Tên danh mục đã tồn tại', 400);
     }
 
+    // Xử lý icon từ upload (Cloudinary)
+    const iconUrl = req.file ? req.file.path : null;
+    if (!iconUrl && req.body.icon) {
+      // Fallback nếu gửi icon URL qua body (tùy chọn, nhưng ưu tiên file upload)
+      console.warn('Icon URL từ body được bỏ qua, ưu tiên file upload');
+    }
+
     // Tạo category mới
     const newCategory = new Category({
       name: name.trim(),
       description: description?.trim() || '',
-      icon: icon || null,
+      icon: iconUrl,
       isActive: isActive !== undefined ? isActive : true,
       createdBy: userId
     });
@@ -85,7 +92,7 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, icon, isActive } = req.body;
+    const { name, description, isActive } = req.body; // Không lấy icon từ body
 
     const category = await Category.findById(id);
 
@@ -94,7 +101,7 @@ exports.updateCategory = async (req, res) => {
     }
 
     // Kiểm tra trùng tên (nếu đổi tên)
-    if (name && name !== category.name) {
+    if (name && name.trim() !== category.name) {
       const existingCategory = await Category.findOne({ 
         name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
         _id: { $ne: id }
@@ -105,11 +112,20 @@ exports.updateCategory = async (req, res) => {
       }
     }
 
-    // Update
+    // Update fields
     if (name) category.name = name.trim();
-    if (description !== undefined) category.description = description.trim();
-    if (icon !== undefined) category.icon = icon;
+    if (description !== undefined) category.description = description?.trim() || '';
     if (isActive !== undefined) category.isActive = isActive;
+
+    // Xử lý icon từ upload (Cloudinary) - ưu tiên file mới nếu có
+    if (req.file) {
+      // Optional: Xóa icon cũ trên Cloudinary nếu có
+      // if (category.icon) { await cloudinary.uploader.destroy(publicIdFromUrl(category.icon)); }
+      category.icon = req.file.path;
+    } else if (req.body.icon !== undefined) {
+      // Fallback: Cho phép update icon qua URL text (nếu không upload file)
+      category.icon = req.body.icon;
+    }
 
     await category.save();
 
@@ -135,6 +151,9 @@ exports.deleteCategory = async (req, res) => {
     if (category.productsCount > 0) {
       return errorResponse(res, 'Không thể xóa danh mục đang có sản phẩm', 400);
     }
+
+    // Optional: Xóa icon trên Cloudinary nếu có
+    // if (category.icon) { await cloudinary.uploader.destroy(publicIdFromUrl(category.icon)); }
 
     await category.deleteOne();
 

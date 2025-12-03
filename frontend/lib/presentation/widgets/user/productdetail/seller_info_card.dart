@@ -1,9 +1,17 @@
+// lib/presentation/widgets/user/productdetail/seller_info_card.dart
 import 'package:flutter/material.dart';
-
 import '../../../../core/theme/app_theme.dart';
+import '../../../../data/models/product_user.dart';
 
 class SellerInfoCard extends StatelessWidget {
-  const SellerInfoCard({Key? key, required String shopName}) : super(key: key);
+  final Seller seller;
+  final String shopName;
+
+  const SellerInfoCard({
+    Key? key,
+    required this.seller,
+    required this.shopName,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,20 +33,25 @@ class SellerInfoCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: AppTheme.secondaryLight,
-                    child: Text('H', style: AppTheme.heading3.copyWith(color: AppTheme.primary)),
+                    child: Text(
+                      seller.username.isNotEmpty ? seller.username[0].toUpperCase() : 'S',
+                      style: AppTheme.heading3.copyWith(color: AppTheme.primary),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Harvest Hub Saigon', style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                        Text('Hoạt động 2 giờ trước', style: AppTheme.caption),
+                        Text(shopName, style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                        Text('${seller.email} • Hoạt động gần đây', style: AppTheme.caption),
                       ],
                     ),
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // TODO: Follow seller
+                    },
                     child: const Text('Theo dõi'),
                   ),
                 ],
@@ -46,9 +59,9 @@ class SellerInfoCard extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildStatItem('12,8', 'Sản phẩm')),
-                  Expanded(child: _buildStatItem('90.5%', 'Đánh giá')),
-                  Expanded(child: _buildStatItem('45,2', 'Phản hồi')),
+                  Expanded(child: _buildStatItem('124', 'Sản phẩm')), // Load from API if available
+                  Expanded(child: _buildStatItem('4.8', 'Đánh giá')),
+                  Expanded(child: _buildStatItem('98%', 'Phản hồi')),
                 ],
               ),
             ],

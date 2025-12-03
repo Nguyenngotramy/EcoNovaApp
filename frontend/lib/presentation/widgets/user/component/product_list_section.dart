@@ -1,9 +1,60 @@
+import 'package:eco_nova_app/presentation/screens/user/product_detail_screen.dart';
+import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'product_card.dart';
+import '../../../../services/auth_service.dart'; 
+import '../../../../services/product_service.dart'; 
+import '../../../../data/models/product_user.dart';
 
-class ProductListSection extends StatelessWidget {
+class ProductListSection extends StatefulWidget {
   const ProductListSection({Key? key}) : super(key: key);
+
+  @override
+  State<ProductListSection> createState() => _ProductListSectionState();
+}
+
+class _ProductListSectionState extends State<ProductListSection> {
+  List<Product> _products = [];
+  bool _isLoadingProducts = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProductFeatured();
+  }
+
+  Future<void> _loadProductFeatured() async {
+    setState(() => _isLoadingProducts = true);
+
+    try {
+      // Gọi API lấy sản phẩm nổi bật
+      final List<dynamic> jsonProducts = await ProductService.getFeaturedProducts();
+      
+      setState(() {
+        _products = jsonProducts
+            .map((json) => Product.fromJson(json as Map<String, dynamic>))
+            .toList();
+      });
+    } catch (e) {
+      print('Load featured products error: $e');
+      _showSnackBar('Lỗi khi tải sản phẩm nổi bật: $e', isError: true);
+    } finally {
+      setState(() => _isLoadingProducts = false);
+    }
+  }
+
+  void _showSnackBar(String message, {required bool isError}) {
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,12 +63,15 @@ class ProductListSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Sản phẩm nổi bật', style: AppTheme.heading3),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  // TODO: Navigate to all products page
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -35,88 +89,58 @@ class ProductListSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-
- GridView.count(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  crossAxisCount: 2,
-  childAspectRatio: 0.72,
-  crossAxisSpacing: 12,
-  mainAxisSpacing: 12,
-  children: [
-    ProductCard(
-      image: 'assets/images/2.jpg',   // ảnh từ assets
-      title: 'Cà chua hữu cơ Đà Lạt',
-      shop: 'Nông trại Xanh',
-      price: '29.000',
-      rating: '4.9',
-      discount: '-42%',
-      badges: ['VietGAP'],
-    ),
-    ProductCard(
-      image: 'assets/images/1.jpg',
-      title: 'Thịt heo sạch CP',
-      shop: 'Meat Master',
-      price: '119.000',
-      rating: '4.8',
-      discount: '-10%',
-      badges: ['Flash Sale'],
-    ),
-    ProductCard(
-      image: 'assets/images/1.jpg',
-      title: 'Bơ booth Đà Lạt chính vụ',
-      shop: 'Bơ Sài Gòn',
-      price: '69.000',
-      rating: '5.0',
-      discount: '-35%',
-      badges: ['Organic'],
-    ),
-    ProductCard(
-      image: 'assets/images/2.jpg',
-      title: 'Trứng gà ta thả vườn (10 quả)',
-      shop: 'Trại Anh Thư',
-      price: '42.000',
-      rating: '4.7',
-      badges: ['Organic'],
-    ),
-    ProductCard(
-      image: 'assets/images/2.jpg',
-      title: 'Rau cải ngọt baby thủy canh',
-      shop: 'Home Farm',
-      price: '18.000',
-      rating: '4.9',
-      discount: '-25%',
-      badges: ['VietGAP'],
-    ),
-    ProductCard(
-      image: 'assets/images/1.jpg',
-      title: 'Nước mắm Phú Quốc 40 độ đạm',
-      shop: 'Nước mắm Tĩn',
-      price: '89.000',
-      rating: '4.9',
-      discount: '-20%',
-      badges: ['VietGAP'],
-    ),
-    ProductCard(
-      image: 'assets/images/2.jpg',
-      title: 'Khoai lang mật Nhật',
-      shop: 'Khoai Lang VN',
-      price: '35.000',
-      rating: '4.8',
-      discount: '-30%',
-      badges: ['Freeship'],
-    ),
-    ProductCard(
-      image: 'assets/images/1.jpg',
-      title: 'Cá hồi Na Uy fillet tươi',
-      shop: 'Seafood Premium',
-      price: '289.000',
-      rating: '5.0',
-      discount: '-5K',
-      badges: ['Flash Sale'],
-    ),
-  ],
-),
+          
+          // Content
+          if (_isLoadingProducts)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_products.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Không có sản phẩm nổi bật',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.72,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: _products.length,
+              itemBuilder: (context, index) {
+                final product = _products[index];
+                
+                return ProductCard(
+                product: product,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailPage(productId: product.id),
+                    ),
+                  );
+                },
+              );
+              },
+            ),
         ],
       ),
     );

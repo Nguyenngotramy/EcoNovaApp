@@ -1,4 +1,7 @@
+// lib/presentation/screens/user/product_detail_screen.dart
 import 'package:flutter/material.dart';
+import '../../../../data/models/product_user.dart';
+import '../../../../services/product_service.dart';
 import '../../widgets/user/component/product_detail_header.dart';
 import '../../widgets/user/productdetail/product_image_carousel.dart';
 import '../../widgets/user/component/product_info_card.dart';
@@ -8,27 +11,16 @@ import '../../widgets/user/productdetail/seller_info_card.dart';
 import '../../widgets/user/component/review_list.dart';
 import '../../widgets/user/component/related_products.dart';
 import '../../widgets/user/component/product_bottom_bar.dart';
+import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  final String heroTag;
-  final String image;
-  final String title;
-  final String shop;
-  final String price;
-  final String rating;
-  final String? discount;
-  final List<String> badges;
+  final String productId; // Receive ID for API load
+  final String? heroTag;
 
-   ProductDetailPage({
+  const ProductDetailPage({
     Key? key,
-    required this.heroTag,
-    required this.image,
-    required this.title,
-    required this.shop,
-    required this.price,
-    required this.rating,
-    this.discount,
-    this.badges = const [],
+    required this.productId,
+    this.heroTag,
   }) : super(key: key);
 
   @override
@@ -36,8 +28,37 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
+  Product? _product;
+  bool _isLoading = true;
   int quantity = 1;
   bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProductDetail();
+  }
+
+  Future<void> _loadProductDetail() async {
+    try {
+      final result = await ProductService.getProductDetail(widget.productId);
+      setState(() {
+        _product = Product.fromJson(result);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Load product detail error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi tải chi tiết sản phẩm: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      setState(() => _isLoading = false);
+    }
+  }
 
   void _incrementQuantity() {
     setState(() => quantity++);
@@ -51,10 +72,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   void _toggleFavorite() {
     setState(() => isFavorite = !isFavorite);
+    // TODO: Call API to toggle favorite
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading || _product == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final product = _product!;
+    final heroTag = widget.heroTag ?? product.id;
+    final title = product.name;
+    final shop = product.sellerName;
+    final price = product.formattedPrice;
+    final rating = product.rating.toStringAsFixed(1);
+    final discount = product.discountText;
+    final badges = product.displayBadges;
+    final seller = product.seller;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -68,8 +106,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   onFavoriteToggle: _toggleFavorite,
                 ),
                 ProductImageCarousel(
-                  heroTag: widget.heroTag,
-                  mainImage: widget.image,
+                  heroTag: heroTag,
+                  images: product.images, // Pass full images list
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -77,21 +115,39 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ProductInfoCard(
-                        title: widget.title,
-                        price: widget.price,
-                        discount: widget.discount,
-                        badges: widget.badges,
+                        title: title,
+                        price: price,
+                        discount: discount,
+                        badges: badges,
                       ),
                       const SizedBox(height: 16),
-                      ProductRatingSection(rating: widget.rating),
+                      ProductRatingSection(
+                        rating: rating,
+                        reviewCount: '${product.reviewCount}',
+                        soldCount: '${product.soldCount}',
+                      ),
                       const SizedBox(height: 16),
-                      const ProductDescription(),
+                      ProductDescription(
+                        detailedDescription: product.detailedDescription,
+                        origin: product.origin,
+                        storageInstructions: product.storageInstructions,
+                        shelfLife: product.shelfLife,
+                        nutritionInfo: product.nutritionInfo,
+                      ),
                       const SizedBox(height: 16),
-                      SellerInfoCard(shopName: widget.shop),
+                      SellerInfoCard(
+                        seller: seller,
+                        shopName: shop,
+                      ),
                       const SizedBox(height: 16),
-                      const ReviewList(),
+                      ReviewList(
+                        // productId: product.id,
+                        // reviewCount: product.reviewCount,
+                      ),
                       const SizedBox(height: 16),
-                      const RelatedProducts(),
+                      RelatedProducts(
+                        // categoryId: product.category.id,
+                      ),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -105,7 +161,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             right: 0,
             child: ProductBottomBar(
               quantity: quantity,
-              price: widget.price,
+              price: price,
               onIncrement: _incrementQuantity,
               onDecrement: _decrementQuantity,
             ),
