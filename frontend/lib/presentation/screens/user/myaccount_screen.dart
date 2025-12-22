@@ -4,6 +4,10 @@ import '../../widgets/user/cart/badge_icon_button.dart';
 import 'cart_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/user_provider.dart';
+import '../../../providers/cart_provider.dart';
+// import '../auth/signin_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -322,6 +326,26 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     );
   }
 
+  Future<void> _logout(BuildContext context) async {
+    // 1. Xóa token lưu máy
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('role');
+
+    // 2. Clear state trong app
+    context.read<UserProvider>().logout();
+    context.read<CartProvider>().setUser(null);
+
+    // 3. Quay về màn login
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/signin',
+      (route) => false,
+    );
+  }
+
+
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -342,6 +366,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                
               },
               child: Text(
                 'Hủy',
@@ -352,7 +377,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async{
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -360,6 +385,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     backgroundColor: AppTheme.primary,
                   ),
                 );
+                await _logout(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,

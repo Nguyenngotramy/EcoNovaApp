@@ -7,12 +7,15 @@ class ProductBottomBar extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
+  final VoidCallback onAddToCart;
 
   const ProductBottomBar({
     Key? key,
     required this.quantity,
     required this.onIncrement,
-    required this.onDecrement, required String price,
+    required this.onDecrement, 
+    required String price,
+    required this.onAddToCart,
   }) : super(key: key);
 
   @override
@@ -59,7 +62,7 @@ class ProductBottomBar extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: onAddToCart,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

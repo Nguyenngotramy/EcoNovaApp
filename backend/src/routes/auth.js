@@ -30,11 +30,13 @@ router.post('/register', async (req, res) => {
 router.post('/verify-otp', async (req, res) => {
   try {
     const { userId, otp } = req.body;
+    console.log(userId, otp)
     const user = await User.findById(userId);
+    console.log(user)
     if (!user || user.otp !== otp || Date.now() > user.otpExpiry) {
       return res.status(400).json({ error: 'OTP sai/hết hạn' });
     }
-
+    console.log(userId, otp)
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpiry = undefined;
@@ -52,11 +54,23 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password, deviceId } = req.body;
 
-    // Tìm user chỉ bằng email
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password)) || !user.isVerified) {
-      return res.status(401).json({ error: 'Sai thông tin hoặc chưa verify' });
+
+    if (!user) {
+      console.log('❌ Không tìm thấy user');
+      return res.status(401).json({ error: 'User không tồn tại' });
     }
+
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Sai mật khẩu' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(401).json({ error: 'Chưa verify tài khoản' });
+    }
+
 
     const token = jwt.sign(
       { id: user._id, role: user.role, deviceId },

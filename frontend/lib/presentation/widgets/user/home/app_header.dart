@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../screens/user/cart_screen.dart';
 import '../cart/badge_icon_button.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/cart_provider.dart';
 
 class AppHeader extends StatelessWidget {
   const AppHeader({Key? key}) : super(key: key);
@@ -34,7 +36,7 @@ class AppHeader extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        'Lo 14, Khu đô thị Nam Việt Á',
+                        'Lô 14, Khu đô thị Nam Việt Á',
                         style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -43,7 +45,7 @@ class AppHeader extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  'Ngu Hành Sơn, Đà Nẵng',
+                  'Ngũ Hành Sơn, Đà Nẵng',
                   style: AppTheme.bodySmall.copyWith(color: AppTheme.textLight),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -57,16 +59,23 @@ class AppHeader extends StatelessWidget {
             onPressed: () {},
           ),
           const SizedBox(width: 8),
-          BadgeIconButton(
-            icon: Icons.shopping_cart_outlined,
-            badgeCount: 1,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CartScreen()),
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              int totalItems = cartProvider.items.values
+                  .fold(0, (sum, item) => sum + item.quantity);
+              return BadgeIconButton(
+                icon: Icons.shopping_cart_outlined,
+                badgeCount: totalItems,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  );
+                },
               );
             },
           ),
+
         ],
       ),
     );

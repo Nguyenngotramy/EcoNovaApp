@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 
 // Component: Order Status Badge
 class OrderStatusBadge extends StatelessWidget {
@@ -64,7 +65,6 @@ class OrderStatusBadge extends StatelessWidget {
 class OrderProductItem extends StatelessWidget {
   final String name;
   final String imageUrl;
-  final String shopName;
   final double price;
   final int quantity;
 
@@ -72,7 +72,6 @@ class OrderProductItem extends StatelessWidget {
     super.key,
     required this.name,
     required this.imageUrl,
-    required this.shopName,
     required this.price,
     required this.quantity,
   });
@@ -86,29 +85,13 @@ class OrderProductItem extends StatelessWidget {
         children: [
           // Product Image
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.borderColor),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppTheme.cardBackground,
-                    child: const Icon(
-                      Icons.image_outlined,
-                      color: AppTheme.textLight,
-                    ),
-                  );
-                },
+              child: buildProductImage(
+                imageUrl: imageUrl,
+                height: 60,
+                width: 60,
+                fit: BoxFit.cover,               // <-- FIX 2
               ),
             ),
-          ),
           const SizedBox(width: 12),
           // Product Info
           Expanded(
@@ -123,11 +106,7 @@ class OrderProductItem extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  shopName,
-                  style: AppTheme.bodySmall,
-                ),
+                
                 const SizedBox(height: 4),
                 Text(
                   '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}VNĐ',
@@ -317,7 +296,6 @@ class OrderCard extends StatelessWidget {
                 return OrderProductItem(
                   name: product['name'],
                   imageUrl: product['imageUrl'],
-                  shopName: product['shopName'],
                   price: product['price'],
                   quantity: product['quantity'],
                 );

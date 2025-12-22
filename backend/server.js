@@ -17,7 +17,10 @@ app.use('/uploads', express.static('uploads'));
 
 // Database connection - XÓA useNewUrlParser và useUnifiedTopology
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/vegetable-shop')
-  .then(() => console.log('✅ MongoDB connected'))
+  .then(() => {
+    console.log('✅ Mongo connected');
+    console.log('👉 URI:', process.env.MONGODB_URI || 'LOCALHOST');
+  })
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ===== ROUTES =====
@@ -32,7 +35,9 @@ app.use('/api/seller/categories', categoryRoutes);
 app.use('/api/seller/products', productRoutes);
 
 const buyerProductRoutes = require('./src/routes/buyer/product.routes');
+const orderRoutes = require('./src/routes/buyer/order.routes');
 app.use('/api/products', buyerProductRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

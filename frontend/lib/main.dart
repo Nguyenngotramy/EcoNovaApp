@@ -25,12 +25,14 @@ import 'presentation/screens/user/search_screen.dart';
 import 'presentation/widgets/user/component/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/cart_provider.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MyApp(),
     ),

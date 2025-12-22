@@ -1,19 +1,16 @@
-
-
 import 'package:flutter/material.dart';
-
 import '../../../../core/theme/app_theme.dart';
-import '../../../../data/models/product.dart';
-
+import '../../../../data/models/cart_item.dart';
+import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
 
 class CartItemCard extends StatelessWidget {
-  final Product product;
+  final CartItem item;
   final VoidCallback onDelete;
   final Function(int) onQuantityChange;
 
   const CartItemCard({
     Key? key,
-    required this.product,
+    required this.item,
     required this.onDelete,
     required this.onQuantityChange,
   }) : super(key: key);
@@ -30,60 +27,55 @@ class CartItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Hình ảnh sản phẩm
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(product.image, style: const TextStyle(fontSize: 32)),
+            child: buildProductImage(
+              imageUrl: item.image,
+              height: 60,
+              width: 60,
+              fit: BoxFit.cover,               // <-- FIX 2
             ),
           ),
           const SizedBox(width: 12),
+
+          // Tên và giá
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name, style: AppTheme.bodyMedium),
+                Text(item.name, style: AppTheme.bodyMedium),
                 const SizedBox(height: 4),
-                Text('${product.price.toStringAsFixed(0)}₫', style: AppTheme.price),
+                Text('${item.price.toStringAsFixed(0)}₫', style: AppTheme.price),
               ],
             ),
           ),
+
+          // Delete
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppTheme.errorColor, size: 20),
+            icon: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
             onPressed: onDelete,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
-          const SizedBox(width: 12),
+
+          // Số lượng + tăng giảm
           Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.borderColor),
-              borderRadius: BorderRadius.circular(20),
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.remove, size: 16),
-                  onPressed: () => onQuantityChange(-1),
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                GestureDetector(
+                  onTap: () => onQuantityChange(-1),
+                  child: const Icon(Icons.remove_circle, color: AppTheme.primary, size: 20),
                 ),
-                Container(
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    '${product.quantity}',
-                    style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(item.quantity.toString(), style: AppTheme.bodyMedium),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 16, color: AppTheme.primary),
-                  onPressed: () => onQuantityChange(1),
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                GestureDetector(
+                  onTap: () => onQuantityChange(1),
+                  child: const Icon(Icons.add_circle, color: AppTheme.primary, size: 20),
                 ),
               ],
             ),

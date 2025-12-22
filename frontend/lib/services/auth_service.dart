@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 
 class AuthService {
   static const String baseUrl =
-      'http://192.168.100.144:5000/api'; // Emulator Android, thay IP real cho device
+      'http://192.168.1.144:5000/api'; // Emulator Android, thay IP real cho device
   static final Uuid _uuid = Uuid();
 
 // Lấy token từ SharedPreferences
@@ -25,6 +25,7 @@ class AuthService {
     final token = await getToken();
     return token != null && token.isNotEmpty;
   }
+
   static Future<Map<String, dynamic>> register(
     String username,
     String email,
@@ -47,7 +48,8 @@ class AuthService {
       }),
     );
     if (response.statusCode == 201) return json.decode(response.body);
-    throw Exception(json.decode(response.body)['message'] ?? 'Registration failed');
+    throw Exception(
+        json.decode(response.body)['message'] ?? 'Registration failed');
   }
 
   static Future<Map<String, dynamic>> verifyOtp(
@@ -66,7 +68,8 @@ class AuthService {
       await prefs.setString('role', data['role']);
       return data;
     }
-    throw Exception(json.decode(response.body)['message'] ?? 'OTP verification failed');
+    throw Exception(
+        json.decode(response.body)['message'] ?? 'OTP verification failed');
   }
 
   static Future<Map<String, dynamic>> login(
@@ -92,4 +95,11 @@ class AuthService {
     }
     throw Exception(json.decode(response.body)['message'] ?? 'Login failed');
   }
+
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('role');
+  }
+
 }

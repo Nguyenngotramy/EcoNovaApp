@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class CategoryService {
-  static const String _host = '192.168.100.144';
+  static const String _host = '192.168.1.144';
   static const int _port = 5000;
 
   static Uri _buildUri(String path, [Map<String, dynamic>? queryParams]) {
@@ -27,10 +27,11 @@ class CategoryService {
   }
 
   // Lấy danh sách categories
-  static Future<List<Map<String, dynamic>>> getAllCategories({String? token}) async {
+  static Future<List<Map<String, dynamic>>> getAllCategories(
+      {String? token}) async {
     try {
       final uri = _buildUri('/api/seller/categories');
-      
+
       final response = await http.get(
         uri,
         headers: _getHeaders(token: token),
@@ -43,7 +44,8 @@ class CategoryService {
         }
         return [];
       } else {
-        throw Exception(json.decode(response.body)['message'] ?? 'Failed to load categories');
+        throw Exception(json.decode(response.body)['message'] ??
+            'Failed to load categories');
       }
     } catch (e) {
       print('Get categories error: $e');
@@ -63,7 +65,7 @@ class CategoryService {
 
       // Tạo multipart request
       var request = http.MultipartRequest('POST', uri);
-      
+
       // Add auth header
       request.headers['Authorization'] = 'Bearer $token';
 
@@ -78,7 +80,8 @@ class CategoryService {
           await http.MultipartFile.fromPath(
             'icon', // Field name khớp backend middleware
             iconFile.path,
-            contentType: MediaType('image', 'jpeg'), // Điều chỉnh theo loại file nếu cần
+            contentType:
+                MediaType('image', 'jpeg'), // Điều chỉnh theo loại file nếu cần
           ),
         );
       }

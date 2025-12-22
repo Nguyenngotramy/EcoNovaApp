@@ -12,6 +12,10 @@ import '../../widgets/user/component/review_list.dart';
 import '../../widgets/user/component/related_products.dart';
 import '../../widgets/user/component/product_bottom_bar.dart';
 import 'package:eco_nova_app/presentation/widgets/user/component/build_product_image.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/cart_provider.dart';
+import '../../../../data/models/cart_item.dart';
+
 
 class ProductDetailPage extends StatefulWidget {
   final String productId; // Receive ID for API load
@@ -38,6 +42,29 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.initState();
     _loadProductDetail();
   }
+
+  void _addToCart() {
+    final cart = context.read<CartProvider>();
+    final product = _product!;
+
+    cart.addToCart(
+      CartItem(
+        productId: product.id,
+        name: product.name,
+        image: product.images.isNotEmpty ? product.images.first : '',
+        price: product.price.toDouble(),
+        quantity: quantity,
+      ),
+  );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã thêm vào giỏ hàng'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
 
   Future<void> _loadProductDetail() async {
     try {
@@ -164,6 +191,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               price: price,
               onIncrement: _incrementQuantity,
               onDecrement: _decrementQuantity,
+              onAddToCart: _addToCart,
             ),
           ),
         ],
